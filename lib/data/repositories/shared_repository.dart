@@ -32,7 +32,7 @@ class SharedRepository {
 
   Future postData(String endpoint, Map<String, dynamic> data) async {
     try {
-      final Response response = await crud.post(endpoint, data: data);
+      final Response response = await crud.putOrPost(endpoint, data: data);
       if (response.statusCode == 200 || response.statusCode == 201) {
         SnackbarHelper.showSnackbar('تم الإضافة بنجاح');
         return response.data['data'];
@@ -58,11 +58,12 @@ class SharedRepository {
     }
   }
 
-  Future postDataWithMultiFile(
+  Future putOrPostDataWithMultiFile(
       String endpoint, Map<String, dynamic> data, List<File> images) async {
     try {
+
       final Response response =
-          await crud.postwithMultiFile(endpoint, data: data, images: images);
+          await crud.putOrPostwithMultiFile(endpoint, data: data, images: images);
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data['data'];
       } else {
@@ -72,4 +73,6 @@ class SharedRepository {
       throw Exception('Failed to connect to server or post data.');
     }
   }
+
+  
 }

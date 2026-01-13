@@ -20,7 +20,8 @@ class DetailsPost extends StatelessWidget {
     // PostModel post = context.read<PostCubit>().postModel;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    print("isfavorite================ ${context.read<FavoriteCubit>().isfavorate}");
+    print(
+        "isfavorite================ ${context.read<FavoriteCubit>().isfavorate}");
 
     // PostCubit cubit = context.read<PostCubit>();
     // cubit.isFavorite = post.fav == 1;

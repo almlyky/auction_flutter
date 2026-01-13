@@ -7,19 +7,11 @@ import 'package:auction/cubit/auth/signup_cubit/signup_cubit.dart';
 import 'package:auction/cubit/bottom_app_bar_cubit/bottom_app_bar_cubit.dart';
 import 'package:auction/cubit/favorite_cubit/favorite_cubit.dart';
 import 'package:auction/cubit/home_cubit/category_cubit/category_cubit.dart';
-// import 'package:auction/cubit/counter_cubit/counter_cubit.dart';
 import 'package:auction/cubit/home_cubit/post_cubit/post_cubit.dart';
 import 'package:auction/cubit/mypost_cubit/mypost_cubit.dart';
 import 'package:auction/cubit/setting_cubit/setting_cubit.dart';
-// import 'package:auction/cubit/home_cubit/category_cubit/category_cubit.dart';
-// import 'package:auction/cubit/shared_cubit.dart';
-// import 'package:auction/data/repositories/category_repository.dart';
 import 'package:auction/data/repositories/shared_repository.dart';
-// import 'package:auction/view/screen/auth/login.dart';
-// import 'package:auction/view/screen/bottombar.dart';
-// import 'package:auction/view/screen/bottombar.dart';
-// import 'package:auction/view/screen/home.dart';
-// import 'package:auction/view/screen/tabBar_home.dart';
+import 'package:auction/cubit/home_cubit/addPost_cubit/add_post_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -45,12 +37,15 @@ void main() async {
       BlocProvider(
         create: (context) => SignupCubit(),
       ),
-       BlocProvider(
+      BlocProvider(
         create: (context) => SettingCubit(),
       ),
-       BlocProvider(
+      BlocProvider(
         create: (context) => MypostCubit(),
-      )
+      ),
+      BlocProvider(
+        create: (context) => AddPostCubit(),
+      ),
     ],
     // create: (context) => PostCubit(repository),
     child: BlocBuilder<SettingCubit, SettingState>(

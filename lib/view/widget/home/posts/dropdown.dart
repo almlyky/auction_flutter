@@ -1,5 +1,6 @@
 import 'package:auction/core/service/services.dart';
 import 'package:auction/cubit/base_cubit/base_cubit.dart';
+import 'package:auction/cubit/home_cubit/addPost_cubit/add_post_cubit.dart';
 import 'package:auction/cubit/home_cubit/post_cubit/post_cubit.dart';
 import 'package:auction/data/models/category_model.dart';
 import 'package:auction/data/models/post_model.dart';
@@ -13,21 +14,21 @@ class CategoryDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PostCubit, BaseState<List<PostModel>>>(
+    return BlocBuilder<AddPostCubit, AddPostState>(
       builder: (context, state) {
         // String selectedText = "اختر الفئة";
         // int? selectedId;
-        
-        if (state is PostCategorySelected) {
-          Children? child = context.read<PostCubit>().child;
-          CategoryModel? parent = context.read<PostCubit>().parent;
 
-          // selectedId = context.read<PostCubit>().selectedId;
+        // if (state.selectedCategory != null) {
+        //   Children? child = state.selectedChildCategory;
+        //   CategoryModel? parent = state.selectedCategory;
 
-          context.read<PostCubit>().selectedText = child != null
-              ? "${parent.nameAr} → ${child.nameAr}"
-              : parent.nameAr ?? "";
-        }
+        //   // selectedId = context.read<PostCubit>().selectedId;
+
+        //   context.read<PostCubit>().selectedText = child != null
+        //       ? "${parent.nameAr} → ${child.nameAr}"
+        //       : parent.nameAr ?? "";
+        // }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +58,7 @@ class CategoryDropdown extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(context.read<PostCubit>().selectedText,
+                    Text(state.selectedCategoryText,
                         style: const TextStyle(fontSize: 15)),
                     const Icon(Icons.arrow_drop_down)
                   ],
@@ -90,15 +91,15 @@ class CategoryDropdown extends StatelessWidget {
 
               return hasChildren
                   ? ExpansionTile(
-                      leading: const Icon(Icons.arrow_drop_down),
+                      // leading: const Icon(Icons.arrow_drop_down),
                       title: Text(cat.nameAr ?? ""),
                       children: cat.children!.map((child) {
                         return ListTile(
-                          leading: const Icon(Icons.subdirectory_arrow_right),
+                          // leading: const Icon(Icons),
                           title: Text(child.nameAr ?? ""),
                           onTap: () {
                             context
-                                .read<PostCubit>()
+                                .read<AddPostCubit>()
                                 .selectedCategory(cat, child);
                             Navigator.pop(context);
                           },
@@ -106,10 +107,12 @@ class CategoryDropdown extends StatelessWidget {
                       }).toList(),
                     )
                   : ListTile(
-                      leading: const Icon(Icons.circle_outlined),
+                      // leading: const Icon(Icons.circle_outlined),
                       title: Text(cat.nameAr ?? ""),
                       onTap: () {
-                        context.read<PostCubit>().selectedCategory(cat, null);
+                        context
+                            .read<AddPostCubit>()
+                            .selectedCategory(cat, null);
                         Navigator.pop(context);
                       },
                     );

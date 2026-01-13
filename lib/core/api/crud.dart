@@ -73,37 +73,61 @@ class Crud {
     return response;
   }
 
-  Future<Response> post(String endpoint, {Map<String, dynamic>? data}) async {
-    return await dio.post(endpoint, data: data);
-  }
+  // Future<Response> post(String endpoint, {Map<String, dynamic>? data}) async {
+  //   return await dio.post(endpoint, data: data);
+  // }
 
-  Future<Response> put(String endpoint, {Map<String, dynamic>? data}) async {
-    return await dio.put(endpoint, data: data);
+  // Future<Response> put(String endpoint, {Map<String, dynamic>? data}) async {
+  //   return await dio.put(endpoint, data: data);
+  // }
+
+  // Combine put and post into one method
+  Future<Response> putOrPost(String endpoint, {Map<String, dynamic>? data}) async {
+    if (data != null && data.containsKey('_method')) {
+      return await dio.put(endpoint, data: data);
+    } else {
+      return await dio.post(endpoint, data: data);
+    }
   }
 
   Future<Response> delete(String endpoint) async {
     return await dio.delete(endpoint);
   }
 
-  Future<Response> postwithFile(
-    String endpoint, {
-    required Map<String, dynamic> data,
-    required String filePath,
-  }) async {
-    // final MultipartFile multipartFile = await MultipartFile.fromFile(filePath);
-    final FormData formData = FormData.fromMap({
-      'data': data,
-      // 'file': multipartFile,
-      'file': await MultipartFile.fromFile(filePath),
-    });
-    return await dio.post(endpoint, data: formData);
-  }
+  // Future<Response> postwithFile(
+  //   String endpoint, {
+  //   required Map<String, dynamic> data,
+  //   required String filePath,
+  // }) async {
+  //   // final MultipartFile multipartFile = await MultipartFile.fromFile(filePath);
+  //   final FormData formData = FormData.fromMap({
+  //     'data': data,
+  //     // 'file': multipartFile,
+  //     'file': await MultipartFile.fromFile(filePath),
+  //   });
+  //   return await dio.post(endpoint, data: formData);
+  // }
 
-  Future<Response> postwithMultiFile(String endpoint,
+  // Future<Response> postwithMultiFile(String endpoint,
+  //     {required Map<String, dynamic> data, required List<File> images}) async {
+  //       // print("=================in crud multi file");
+  //       // print(images);
+
+  //       List<MultipartFile > multipartFiles = [];
+  //       for (File image in images) {
+  //         // MultipartFile multipartFile = await MultipartFile.fromFile(image.path);
+  //         multipartFiles.add(await MultipartFile.fromFile(image.path));
+  //       }
+  //   final FormData formData = FormData.fromMap({
+  //     'data': data,
+  //     'images[]': multipartFiles,
+  //   });
+  //   return await dio.post(endpoint, data: formData);
+  //     }
+  
+  // fu
+  Future<Response> putOrPostwithMultiFile(String endpoint,
       {required Map<String, dynamic> data, required List<File> images}) async {
-        // print("=================in crud multi file");
-        // print(images);
-
         List<MultipartFile > multipartFiles = [];
         for (File image in images) {
           // MultipartFile multipartFile = await MultipartFile.fromFile(image.path);
@@ -113,6 +137,11 @@ class Crud {
       'data': data,
       'images[]': multipartFiles,
     });
-    return await dio.post(endpoint, data: formData);
-      }
+    // laravel not support put with file so we use post with _method put
+    // if (data.containsKey('_method')) {
+      // return await dio.put(endpoint, data: formData);
+    // } else {
+      return await dio.post(endpoint, data: formData);
+    // }
+  }
 }

@@ -36,7 +36,7 @@ class PostModel {
     userId = int.parse(json['user_id'].toString());
     categoryId = int.parse(json['category_id'].toString());
     createdAt = DateTime.parse(json['created_at']);
-    fav= int.parse(json['fav'].toString());
+    fav = int.parse(json['fav'].toString());
     if (json['images'] != null) {
       images = <Images>[];
       json['images'].forEach((v) {
@@ -46,38 +46,41 @@ class PostModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['address'] = this.address;
-    data['discribtion'] = this.discribtion;
-    data['price'] = this.price;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['address'] = address;
+    data['discribtion'] = discribtion;
+    data['price'] = price;
     data["status"] = status ?? "available";
     data['product_status'] = productStatus;
-    data['user_id'] = this.userId;
-    data['category_id'] = this.categoryId;
-    if (this.images != null) {
-      data['images'] = this.images!.map((v) => v.toJson()).toList();
+    data['user_id'] = userId;
+    data['category_id'] = categoryId;
+    if (images != null) {
+      data['images'] = images!.map((v) => v.toJson()).toList();
     }
     return data;
   }
 }
 
 class Images {
+  int? id;
   String? imageUrl;
   int? isMain;
 
-  Images({this.imageUrl, this.isMain});
+  Images({this.id, this.imageUrl, this.isMain});
 
   Images.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
     imageUrl = json['image_url'];
     isMain = int.parse(json['is_main'].toString());
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['image_url'] = this.imageUrl;
-    data['is_main'] = this.isMain;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['image_url'] = imageUrl;
+    data['is_main'] = isMain;
     return data;
   }
 }

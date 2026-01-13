@@ -30,6 +30,16 @@ class BaseCubit<T> extends Cubit<BaseState<T>> {
       emit(BaseError(e.toString()));
     }
   }
+
+  updateData(Future<T> Function() updater) async {
+    try {
+      emit(BaseLoading());
+      final result = await updater();
+      emit(BaseSuccess(data: result));
+    } catch (e) {
+      emit(BaseError(e.toString()));
+    }
+  }
   
 
   deleteData(Future<T> Function() deleter) async {

@@ -30,6 +30,13 @@ class AppRoutes {
       GoRoute(
         path: addEditPost,
         builder: (context, state) {
+          if (state.extra is Map) {
+            final map = state.extra as Map;
+            return AddEditPost(
+              postAction: map['action'] as PostAction,
+              post: map['post'] as PostModel?,
+            );
+          }
           PostAction postAction = state.extra as PostAction;
           return AddEditPost(postAction: postAction);
         },

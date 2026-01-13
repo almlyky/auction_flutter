@@ -3,13 +3,18 @@ import 'dart:io';
 
 import 'package:auction/core/api/links_api.dart';
 import 'package:auction/core/service/services.dart';
+import 'package:auction/core/utils/enums.dart';
+import 'package:auction/cubit/home_cubit/category_cubit/category_cubit.dart';
 import 'package:auction/data/models/category_model.dart';
 import 'package:auction/data/models/post_model.dart';
 import 'package:auction/data/repositories/shared_repository.dart';
 import 'package:bloc/bloc.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../base_cubit/base_cubit.dart';
 
 part 'post_state.dart';
@@ -20,18 +25,19 @@ class PostCubit extends BaseCubit<List<PostModel>> {
     getPost();
   }
 
-  List<File> images = [];
+  // List<File> images = [];
   // List<PostModel> posts = [];
   String selectedStatus = 'used';
-  TextEditingController name = TextEditingController();
-  TextEditingController description = TextEditingController();
-  TextEditingController price = TextEditingController();
-  TextEditingController address = TextEditingController();
-  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  // TextEditingController name = TextEditingController();
+  // TextEditingController descriptiZon = TextEditingController();
+  // TextEditingController price = TextEditingController();
+  // TextEditingController address = TextEditingController();
+  // GlobalKey<FormState> formKey = GlobalKey<FormState>();
   late PostModel postModel;
   int currentImageIndex = 0;
   bool isFavorite = false;
   List<PostModel> curent = [];
+  Set<int> imagesToDelete = {};
   // List<String> list = ['One', 'Two', 'Three', 'Four'];
 
   // CategoryModel? selectedCategory;
@@ -45,39 +51,103 @@ class PostCubit extends BaseCubit<List<PostModel>> {
   int? selectedId;
   String selectedText = "اختر الفئة";
 
-  
-  void setDataForEdit(PostModel post) {
-    postModel = post;
-    name.text = post.name ?? '';
-    description.text = post.discribtion ?? '';
-    price.text = post.price != null ? post.price.toString() : '';
-    address.text = post.address ?? '';
-    selectedStatus = post.productStatus ?? 'used';
-  }
+  // void setDataForEdit(PostModel post, BuildContext context) async {
+  //   postModel = post;
+  //   name.text = post.name ?? '';
+  //   description.text = post.discribtion ?? '';
+  //   price.text = post.price != null ? post.price.toString() : '';
+  //   address.text = post.address ?? '';
+  //   selectedStatus = post.productStatus ?? 'used';
 
-  void addPost() async {
-    print("======== Adding Post ========");
-    if (formKey.currentState!.validate() && selectedId != null) {
-      await addData(() async {
-        print("======== Adding Post ========");
-        PostModel post = PostModel(
-          name: name.text,
-          discribtion: description.text,
-          price: int.parse(price.text),
-          address: address.text,
-          productStatus: selectedStatus,
-          userId: Services.user!.id!,
-          categoryId: selectedId!,
-        );
-        final data = post.toJson();
-        var response = await sharedRepository.postDataWithMultiFile(
-            LinksApi.endpointPosts, data, images);
-        PostModel newpost = PostModel.fromJson(response);
-        // final curent = state.data ?? [];
-        return [...curent, newpost];
-      });
-    }
-  }
+  //   var categoryCubit = context.read<CategoryCubit>();
+  //   var categoryOrChild = categoryCubit.getCategoryById[post.categoryId];
+
+  //   if (categoryOrChild is CategoryModel) {
+  //     selectedCategory(categoryOrChild, null);
+  //   } else if (categoryOrChild is Children) {
+  //     var parent = categoryCubit.getCategoryById[categoryOrChild.parentId];
+  //     if (parent is CategoryModel) {
+  //       selectedCategory(parent, categoryOrChild);
+  //     }
+  //   }
+
+  //   List<File> tempImages = [];
+  //   if (post.images != null) {
+  //     for (var image in post.images!) {
+  //       File file = await urlToFile(image.imageUrl!);
+  //       tempImages.add(file);
+  //     }
+  //   }
+  //   images = tempImages;
+  //   emit(PostImageSelected(List.unmodifiable(images)));
+  // }
+
+  // Future<File> urlToFile(String imageUrl) async {
+  //   final dio = Dio();
+  //   Uri uri = Uri.parse(imageUrl);
+  //   String fileName = uri.pathSegments.last;
+  //   // مجلد مؤقت
+  //   final tempDir = await getTemporaryDirectory();
+  //   final filePath = '${tempDir.path}/$fileName';
+
+  //   await dio.download(
+  //     imageUrl,
+  //     filePath,
+  //   );
+
+  //   return File(filePath);
+  // }
+
+  // void addPost() async {
+  //   // print("======== Adding Post ========");
+  //   if (formKey.currentState!.validate() && selectedId != null) {
+  //     await addData(() async {
+  //       // print("======== Adding Post ========");
+  //       PostModel post = PostModel(
+  //         name: name.text,
+  //         discribtion: description.text,
+  //         price: int.parse(price.text),
+  //         address: address.text,
+  //         productStatus: selectedStatus,
+  //         userId: Services.user!.id!,
+  //         categoryId: selectedId!,
+  //       );
+  //       final data = post.toJson();
+  //       var response = await sharedRepository.putOrPostDataWithMultiFile(
+  //           LinksApi.endpointPosts, data, images);
+  //       PostModel newpost = PostModel.fromJson(response);
+  //       // final curent = state.data ?? [];
+  //       return [...curent, newpost];
+  //     });
+  //   }
+  // }
+
+  // updatePost() async {
+  //   await updateData(() async {
+  //     // print("======== Updating Post ========");
+  //     PostModel post = PostModel(
+  //       id: postModel.id,
+  //       name: name.text,
+  //       discribtion: description.text,
+  //       price: int.parse(price.text),
+  //       address: address.text,
+  //       productStatus: selectedStatus,
+  //       userId: Services.user!.id!,
+  //       categoryId: selectedId!,
+  //     );
+  //     final data = post.toJson();
+  //     data['_method'] = 'PUT';
+  //     if(imagesToDelete.isNotEmpty){
+  //       data['images_to_delete[]'] = imagesToDelete;
+  //     }
+  //     var response = await sharedRepository.putOrPostDataWithMultiFile(
+  //         "${LinksApi.endpointPosts}/${postModel.id}", data, images);
+  //       PostModel updatedpost = PostModel.fromJson(response);
+  //       final updatedList =
+  //           curent.map((p) => p.id == updatedpost.id ? updatedpost : p).toList();
+  //       return updatedList;
+  //     });
+  //   }
 
   getPost() async {
     await load(() async {
@@ -119,38 +189,45 @@ class PostCubit extends BaseCubit<List<PostModel>> {
   //   });
   // }
 
-  void deleteImage(int index) {
-    images = List<File>.from(images)..removeAt(index);
-    emit(PostImageSelected(List.unmodifiable(images)));
-  }
+  // void deleteImage(int index, PostAction action) {
+  //   if (index < postModel.images!.length) {
+  //     // if (action == PostAction.edit) {
+  //     int id = postModel.images![index].id!;
+  //     imagesToDelete.add(id);
+  //     print(imagesToDelete);
+  //     // }
+  //   }
+  //   images = List<File>.from(images)..removeAt(index);
+  //   emit(PostImageSelected(List.unmodifiable(images)));
+  // }
 
-  void selectPostImage() async {
-    final ImagePicker picker = ImagePicker();
-    List<XFile> pickedfiles = await picker.pickMultiImage();
-    if (pickedfiles.isEmpty) return;
-    images = [...images, ...pickedfiles.map((e) => File(e.path))];
-    emit(PostImageSelected(List.unmodifiable(images)));
+  // void selectPostImage() async {
+  //   final ImagePicker picker = ImagePicker();
+  //   List<XFile> pickedfiles = await picker.pickMultiImage();
+  //   if (pickedfiles.isEmpty) return;
+  //   images = [...images, ...pickedfiles.map((e) => File(e.path))];
+  //   emit(PostImageSelected(List.unmodifiable(images)));
 
-    // List<File> newFiles = pickedfiles.map((image) => File(image.path)).toList();
+  //   // List<File> newFiles = pickedfiles.map((image) => File(image.path)).toList();
 
-    // if (newFiles.isNotEmpty) {
-    //   if (images.isNotEmpty) {
-    //     List<File> combinedImages = List<File>.from(images)..addAll(newFiles);
-    //     // images = combinedImages;
-    //     emit(PostImageSelected(combinedImages));
-    //   } else {
-    //     images = newFiles;
-    //     emit(PostImageSelected(images));
-    //   }
-    // }
-  }
+  //   // if (newFiles.isNotEmpty) {
+  //   //   if (images.isNotEmpty) {
+  //   //     List<File> combinedImages = List<File>.from(images)..addAll(newFiles);
+  //   //     // images = combinedImages;
+  //   //     emit(PostImageSelected(combinedImages));
+  //   //   } else {
+  //   //     images = newFiles;
+  //   //     emit(PostImageSelected(images));
+  //   //   }
+  //   // }
+  // }
 
-  void selectedCategory(CategoryModel parent, Children? child) {
-    selectedId = child?.id ?? parent.id;
-    this.parent = parent;
-    this.child = child;
-    emit(PostCategorySelected(parent, child));
-  }
+//   void selectedCategory(CategoryModel parent, Children? child) {
+//     selectedId = child?.id ?? parent.id;
+//     this.parent = parent;
+//     this.child = child;
+//     emit(PostCategorySelected(parent, child));
+//   }
 
   String timeAgo(DateTime date) {
     final now = DateTime.now();
@@ -176,12 +253,12 @@ class PostCubit extends BaseCubit<List<PostModel>> {
     // emit(PostImageIndexChanged(index));
   }
 
-  @override
-  Future<void> close() {
-    name.dispose();
-    description.dispose();
-    price.dispose();
-    address.dispose();
-    return super.close();
-  }
+//   @override
+//   Future<void> close() {
+//     name.dispose();
+//     description.dispose();
+//     price.dispose();
+//     address.dispose();
+//     return super.close();
+//   }
 }

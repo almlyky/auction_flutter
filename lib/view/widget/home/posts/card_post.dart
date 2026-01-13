@@ -132,8 +132,10 @@ class PostCard extends StatelessWidget {
                               icon: Icons.edit,
                               color: Colors.blue,
                               onTap: () {
-                                context.read<PostCubit>().setDataForEdit(post);
-                                context.push(AppRoutes.addEditPost,extra: PostAction.edit);
+                                context.push(AppRoutes.addEditPost, extra: {
+                                  'action': PostAction.edit,
+                                  'post': post,
+                                });
                               },
                             ),
                             const SizedBox(width: 6),

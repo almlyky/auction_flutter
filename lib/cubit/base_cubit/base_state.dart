@@ -13,7 +13,9 @@ class BaseState<T> extends Equatable {
   List<Object> get props => [];
 }
 
-final class BaseInitial<T> extends BaseState<T> {}
+final class BaseInitial<T> extends BaseState<T> {
+  const BaseInitial();
+}
 
 final class BaseLoading<T> extends BaseState<T> {}
 

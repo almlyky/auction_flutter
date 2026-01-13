@@ -1,101 +1,105 @@
-import 'dart:io';
 import 'package:auction/core/service/services.dart';
 import 'package:auction/core/utils/enums.dart';
+
 import 'package:auction/core/utils/snackbar_helper.dart';
-import 'package:auction/core/utils/utils.dart';
 import 'package:auction/cubit/base_cubit/base_cubit.dart';
-import 'package:auction/cubit/home_cubit/post_cubit/post_cubit.dart';
+import 'package:auction/cubit/home_cubit/addPost_cubit/add_post_cubit.dart';
 import 'package:auction/cubit/home_cubit/category_cubit/category_cubit.dart';
 import 'package:auction/data/models/post_model.dart';
 import 'package:auction/data/models/category_model.dart';
 import 'package:auction/view/widget/home/posts/custotextfield.dart';
-import 'package:auction/view/widget/home/posts/dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class AddEditPost extends StatelessWidget {
+class AddEditPost extends StatefulWidget {
   final PostAction postAction;
-  const AddEditPost({super.key, required this.postAction});
+  final PostModel? post; // Add post parameter for edit mode
+
+  const AddEditPost({super.key, required this.postAction, this.post});
+
+  @override
+  State<AddEditPost> createState() => _AddEditPostState();
+}
+
+class _AddEditPostState extends State<AddEditPost> {
+  TextEditingController name = TextEditingController();
+  TextEditingController description = TextEditingController();
+  TextEditingController price = TextEditingController();
+  TextEditingController address = TextEditingController();
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.postAction == PostAction.edit && widget.post != null) {
+      name.text = widget.post!.name ?? '';
+      description.text = widget.post!.discribtion ?? '';
+      price.text = widget.post!.price?.toString() ?? '';
+      address.text = widget.post!.address ?? '';
+
+      // Initialize Cubit with post data
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<AddPostCubit>().setDataForEdit(
+            widget.post!, context.read<CategoryCubit>().getCategoryById);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    description.dispose();
+    price.dispose();
+    address.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    PostCubit cubit = context.read<PostCubit>();
-
-    List<CategoryModel> categories =
-        context.read<CategoryCubit>().categoriesModel;
-    // selectedCategory ??= categories.isNotEmpty ? categories.first : null;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(postAction == PostAction.add
+        title: Text(widget.postAction == PostAction.add
             ? 'إضافة إعلان جديد'
             : "تعديل الاعلان"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: BlocBuilder<PostCubit, BaseState<List<PostModel>>>(
+        child: BlocConsumer<AddPostCubit, AddPostState>(
+          listener: (context, state) {
+            if (state.status is BaseSuccess) {
+              Navigator.pop(context);
+            } else if (state.status is BaseError) {
+              SnackbarHelper.showSnackbar((state.status as BaseError).message);
+            }
+          },
           builder: (context, state) {
-            // final images = state is PostImageSelected ? state.images : [];
-            // print(
-            //     "======================== reload PostCubit ========================= ");
+            var cubit = context.read<AddPostCubit>();
             return Form(
-              key: cubit.formKey,
+              key: formKey,
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    SizedBox(height: 10),
-                    // الحقول النصية
+                    const SizedBox(height: 10),
                     CustomTextFieldPost(
-                        controller: cubit.name, label: 'عنوان الإعلان'),
-                    SizedBox(
-                      height: 10,
-                    ),
+                        controller: name, label: 'عنوان الإعلان'),
+                    const SizedBox(height: 10),
                     CustomTextFieldPost(
                         minLines: 5,
                         maxLines: 10,
-                        controller: cubit.description,
+                        controller: description,
                         label: 'وصف الإعلان'),
-                    SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
                     CustomTextFieldPost(
-                        controller: cubit.price,
+                        controller: price,
                         label: 'السعر',
                         keyboardType: TextInputType.number),
-                    SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
                     CustomTextFieldPost(
-                        controller: cubit.address, label: 'مكان المنتج'),
-                    SizedBox(height: 10),
-
-                    // Padding(
-                    //   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    //   child: DropdownButtonFormField<String>(
-                    //     initialValue: selectedStatus,
-                    //     decoration: const InputDecoration(
-                    //       labelText: 'الحالة',
-                    //       border: OutlineInputBorder(),
-                    //       contentPadding: EdgeInsets.symmetric(
-                    //           horizontal: 12, vertical: 14),
-                    //     ),
-                    //     items: const [
-                    //       DropdownMenuItem(
-                    //           value: 'available', child: Text('متاح')),
-                    //       DropdownMenuItem(value: 'sold', child: Text('تم البيع')),
-                    //     ],
-                    //     onChanged: (val) {
-                    //       setState(() {
-                    //         selectedStatus = val ?? 'available';
-                    //       });
-                    //     },
-                    //     validator: (val) =>
-                    //         val == null || val.isEmpty ? 'اختر الحالة' : null,
-                    //   ),
-                    // ),
+                        controller: address, label: 'مكان المنتج'),
+                    const SizedBox(height: 10),
 
                     DropdownButtonFormField<String>(
-                      initialValue: cubit.selectedStatus,
+                      initialValue: state.selectedStatus,
                       decoration: const InputDecoration(
                         labelText: 'حالة المنتج',
                         border: OutlineInputBorder(),
@@ -107,9 +111,7 @@ class AddEditPost extends StatelessWidget {
                         DropdownMenuItem(value: 'used', child: Text('مستعمل')),
                       ],
                       onChanged: (val) {
-                        // setState(() {
-                        cubit.selectedStatus = val!;
-                        // });
+                        if (val != null) cubit.changeStatus(val);
                       },
                       validator: (val) => val == null || val.isEmpty
                           ? 'اختر حالة المنتج'
@@ -117,112 +119,160 @@ class AddEditPost extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 16),
-                    CategoryDropdown(
-                      categories: categories,
+                    // Category Dropdown - Simplified for now, ideally should be a separate widget that takes state
+                    InkWell(
+                      onTap: () => _openCategoryDialog(context, cubit),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Services.prefs?.getBool("isDark") == true
+                              ? Colors.black.withOpacity(0.03)
+                              : Colors.white.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: Services.prefs?.getBool("isDark") == true
+                                  ? Colors.white24
+                                  : Colors.black26),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(state.selectedCategoryText,
+                                style: const TextStyle(fontSize: 15)),
+                            const Icon(Icons.arrow_drop_down)
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
 
-                    // عرض الصور المختارة
-                    // if (context.read<PostCubit>().images.isNotEmpty)
+                    // Images
                     SizedBox(
                       height: 100,
-                      child: ListView.builder(
+                      child: ListView(
                         scrollDirection: Axis.horizontal,
-                        itemCount: context.read<PostCubit>().images.length + 1,
-                        itemBuilder: (context, index) {
-                          if (state is PostImageSelected) {
-                            // print(
-                            //     "===== PostImageSelected State with ${state.images.length} images =====");
-                          }
-                          if (index ==
-                              context.read<PostCubit>().images.length) {
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: GestureDetector(
-                                onTap: () {
-                                  context.read<PostCubit>().selectPostImage();
-                                },
-                                child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[300],
+                        children: [
+                          ...state.currentImages.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            var image = entry.value;
+                            return Stack(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.add_a_photo,
-                                    size: 40,
-                                    color: Colors.white,
+                                    child: Image.network(
+                                      image.imageUrl ?? "",
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(Icons.error),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                Positioned(
+                                    right: 0,
+                                    child: IconButton(
+                                        onPressed: () {
+                                          cubit.deleteExistingImage(index);
+                                        },
+                                        icon: const Icon(
+                                          Icons.delete_forever_sharp,
+                                          color: Colors.red,
+                                        )))
+                              ],
                             );
-                          }
-
-                          return Stack(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    context.read<PostCubit>().images[index],
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
+                          }),
+                          ...state.newImages.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            var file = entry.value;
+                            return Stack(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.file(
+                                      file,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
+                                Positioned(
+                                    right: 0,
+                                    child: IconButton(
+                                        onPressed: () {
+                                          cubit.deleteNewImage(index);
+                                        },
+                                        icon: const Icon(
+                                          Icons.delete_forever_sharp,
+                                          color: Colors.red,
+                                        )))
+                              ],
+                            );
+                          }),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onTap: () {
+                                cubit.selectPostImage();
+                              },
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.add_a_photo,
+                                  size: 40,
+                                  color: Colors.white,
+                                ),
                               ),
-                              Positioned(
-                                  right: 0,
-                                  child: IconButton(
-                                      onPressed: () {
-                                        context
-                                            .read<PostCubit>()
-                                            .deleteImage(index);
-                                      },
-                                      icon: Icon(
-                                        Icons.delete_forever_sharp,
-                                        color: Colors.red,
-                                      )))
-                            ],
-                          );
-                        },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
                     const SizedBox(height: 16),
 
-                    // عرض حالة التحميل أو الخطأ
-                    if (state is BaseLoading)
-                      const CircularProgressIndicator()
-                    else if (state is BaseError)
-                      Text(
-                        'Error adding post: ${(state as BaseError).message}',
-                        style: const TextStyle(color: Colors.red),
-                      ),
+                    if (state.status is BaseLoading)
+                      const CircularProgressIndicator(),
 
                     const SizedBox(height: 16),
 
-                    // زر الإرسال
                     ElevatedButton(
                       onPressed: () {
-                        // if (cubit.formKey.currentState!.validate() &&
-                        //     context.read<PostCubit>().selectedId != null) {
-                        //   PostModel post = PostModel(
-                        //     name: name.text,
-                        //     discribtion: description.text,
-                        //     price: int.parse(price.text),
-                        //     address: address.text,
-                        //     userId: Services.user!.id!,
-                        //     categoryId: context.read<PostCubit>().selectedId!,
-                        //   );
-                        if (postAction == PostAction.add) {
-                          context.read<PostCubit>().addPost();
-                        } else {
-                          SnackbarHelper.showSnackbar("تعديل المنتج");
+                        if (formKey.currentState!.validate()) {
+                          if (state.selectedCategoryId == null) {
+                            SnackbarHelper.showSnackbar("يرجى اختيار الفئة");
+                            return;
+                          }
+
+                          if (widget.postAction == PostAction.add) {
+                            cubit.addPost(
+                              name: name.text,
+                              description: description.text,
+                              price: price.text,
+                              address: address.text,
+                            );
+                          } else {
+                            cubit.updatePost(
+                              postId: widget.post!.id!,
+                              name: name.text,
+                              description: description.text,
+                              price: price.text,
+                              address: address.text,
+                            );
+                          }
                         }
-                        // }
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -231,7 +281,7 @@ class AddEditPost extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(postAction == PostAction.add
+                      child: Text(widget.postAction == PostAction.add
                           ? 'إضافة الإعلان'
                           : "تعديل الاعلان"),
                     ),
@@ -240,6 +290,49 @@ class AddEditPost extends StatelessWidget {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  void _openCategoryDialog(BuildContext context, AddPostCubit cubit) {
+    List<CategoryModel> categories =
+        context.read<CategoryCubit>().categoriesModel;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("اختر الفئة"),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 350,
+          child: ListView(
+            children: categories.map((cat) {
+              bool hasChildren =
+                  cat.children != null && cat.children!.isNotEmpty;
+
+              return hasChildren
+                  ? ExpansionTile(
+                      title: Text(cat.nameAr ?? ""),
+                      children: cat.children!.map((child) {
+                        return ListTile(
+                          title: Text(child.nameAr ?? ""),
+                          onTap: () {
+                            cubit.selectedCategory(cat, child);
+                            Navigator.pop(context);
+                          },
+                        );
+                      }).toList(),
+                    )
+                  : ListTile(
+                      title: Text(cat.nameAr ?? ""),
+                      onTap: () {
+                        cubit.selectedCategory(cat, null);
+                        Navigator.pop(context);
+                      },
+                    );
+            }).toList(),
+          ),
         ),
       ),
     );

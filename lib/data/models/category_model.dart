@@ -24,11 +24,20 @@
 
 // }
 
-class CategoryModel {
+import 'package:hive/hive.dart';
+part 'category_model.g.dart';
+
+@HiveType(typeId: 0)
+class CategoryModel extends HiveObject {
+  @HiveField(0)
   int? id;
+  @HiveField(1)
   String? nameAr;
+  @HiveField(2)
   String? nameEn;
+  @HiveField(3)
   int? parentId;
+  @HiveField(4)
   List<Children>? children;
 
   CategoryModel(
@@ -48,22 +57,27 @@ class CategoryModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name_ar'] = this.nameAr;
-    data['name_en'] = this.nameEn;
-    data['parent_id'] = this.parentId;
-    if (this.children != null) {
-      data['children'] = this.children!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name_ar'] = nameAr;
+    data['name_en'] = nameEn;
+    data['parent_id'] = parentId;
+    if (children != null) {
+      data['children'] = children!.map((v) => v.toJson()).toList();
     }
     return data;
   }
 }
 
-class Children {
+@HiveType(typeId: 1)
+class Children extends HiveObject {
+  @HiveField(0)
   int? id;
+  @HiveField(1)
   String? nameAr;
+  @HiveField(2)
   String? nameEn;
+  @HiveField(3)
   int? parentId;
 
   Children({this.id, this.nameAr, this.nameEn, this.parentId});
@@ -76,11 +90,11 @@ class Children {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name_ar'] = this.nameAr;
-    data['name_en'] = this.nameEn;
-    data['parent_id'] = this.parentId;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name_ar'] = nameAr;
+    data['name_en'] = nameEn;
+    data['parent_id'] = parentId;
     return data;
   }
 }

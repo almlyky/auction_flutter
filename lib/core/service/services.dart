@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:auction/data/models/category_model.dart';
 import 'package:auction/data/models/user_model.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Services {
@@ -8,6 +11,12 @@ class Services {
   static SharedPreferences? prefs;
   static Future<void> init() async {
     prefs = await SharedPreferences.getInstance();
+      await Hive.initFlutter();
+
+  Hive.registerAdapter(CategoryModelAdapter());
+  Hive.registerAdapter(ChildrenAdapter());
+
+  await Hive.openBox<CategoryModel>('categories');
   }
   static  saveToken(String token)async {
     await prefs?.setString('access_token', token);
